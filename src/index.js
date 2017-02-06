@@ -1,5 +1,4 @@
-import React from 'react'
-import classnames from 'classnames'
+import React from 'react' import classnames from 'classnames'
 //
 import _ from './utils'
 
@@ -951,7 +950,7 @@ export default React.createClass({
     // }]
   },
   sortData (data, sorting) {
-    const sorted = _.sortBy(data, sorting.map(sort => {
+    const sorted = _.orderBy(data, sorting.map(sort => {
       return row => {
         if (row[sort.id] === null || row[sort.id] === undefined) {
           return -Infinity
