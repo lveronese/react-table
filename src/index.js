@@ -1,4 +1,5 @@
-import React from 'react' import classnames from 'classnames'
+import React from 'react'
+import classnames from 'classnames'
 //
 import _ from './utils'
 
@@ -66,6 +67,14 @@ export const ReactTableDefaults = {
   getPaginationProps: emptyObj,
   getLoadingProps: emptyObj,
 
+  // Selection Properties
+  selected: undefined,
+  
+  // Edit Properties
+  editable: false,
+  multiRowEdit: false,
+  allowRowEdit: undefined,
+
   // Global Column Defaults
   column: {
     sortable: true,
@@ -73,6 +82,9 @@ export const ReactTableDefaults = {
     minWidth: 100,
     // Cells only
     render: undefined,
+    editor: undefined,
+    allowCellEdit: undefined,
+    onChange: undefined,
     className: '',
     style: {},
     getProps: () => ({}),
@@ -190,7 +202,7 @@ export default React.createClass({
       oldState.resolvedData !== newResolvedState.resolvedData ||
       oldState.sorting !== newResolvedState.sorting
     ) {
-      Object.assign(newState, this.getSortedData({}, newState))
+      Object.assign(newState, this.getSortedData(newState.sorting ? {sorting: newState.sorting} : {}, newState))
     }
     // Calculate pageSize all the time
     if (newResolvedState.resolvedData) {
@@ -206,6 +218,7 @@ export default React.createClass({
     if (
       oldState.sortedData !== newState.sortedData ||
       oldState.page !== newState.page ||
+      oldState.data !== newState.data ||
       oldState.pageSize !== newState.pageSize ||
       oldState.expandedRows !== newState.expandedRows
     ) {
@@ -240,6 +253,10 @@ export default React.createClass({
       manual,
       loadingText,
       // State
+      selected,
+      editable,
+      allowRowEdit,
+      multiRowEdit,
       loading,
       pageSize,
       page,
@@ -574,6 +591,10 @@ export default React.createClass({
       const isExpanded = _.get(expandedRows, rowInfo.nestingPath)
       const trGroupProps = getTrGroupProps(finalState, rowInfo, undefined, this)
       const trProps = _.splitProps(getTrProps(finalState, rowInfo, undefined, this))
+      const isSelected = selected ? selected(finalState, rowInfo, undefined, this) : false;
+      const isRowEditable = editable 
+        && (isSelected || multiRowEdit)
+        && (allowRowEdit ? allowRowEdit(finalState, rowInfo, undefined, this) : true);
       return (
         <TrGroupComponent
           key={rowInfo.nestingPath.join('_')}
@@ -588,12 +609,18 @@ export default React.createClass({
             {...trProps.rest}
           >
             {allVisibleColumns.map((column, i2) => {
-              const Cell = column.render
+              let Cell = column.render;
               const show = typeof column.show === 'function' ? column.show() : column.show
               const width = _.getFirstDefined(column.width, column.minWidth)
               const maxWidth = _.getFirstDefined(column.width, column.maxWidth)
               const tdProps = _.splitProps(getTdProps(finalState, rowInfo, column, this))
               const columnProps = _.splitProps(column.getProps(finalState, rowInfo, column, this))
+              if (isRowEditable) {
+                if (column.editor 
+                  && (column.allowCellEdit ? column.allowCellEdit(finalState, rowInfo, column, this) : true)) {
+                    Cell = column.editor;
+                  }
+              }
 
               const classes = [
                 tdProps.className,
@@ -706,7 +733,12 @@ export default React.createClass({
                 >
                   {typeof Cell === 'function' ? (
                     <Cell
-                      {...rowInfo}
+                      {...resolvedState}
+                      {...rowInfo}                 
+                      meta={column.meta}
+                      onChange={column.onChange}
+                      disabled={false}
+                      data={rowInfo.rowValues.__original}
                       value={rowInfo.rowValues[column.id]}
                     />
                   ) : typeof Cell !== 'undefined' ? Cell

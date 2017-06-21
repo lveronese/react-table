@@ -10,7 +10,8 @@ export default {
       pivotValKey,
       subRowsKey,
       expanderColumnWidth,
-      SubComponent
+      SubComponent,
+      sorting
     } = this.getResolvedState(nextProps, nextState)
 
     // Determine Header Groups
@@ -218,7 +219,8 @@ export default {
       allVisibleColumns,
       headerGroups,
       allDecoratedColumns,
-      hasHeaderGroups
+      hasHeaderGroups,
+      sorting
     }
   },
   getSortedData (nextProps, nextState) {
@@ -229,7 +231,7 @@ export default {
       resolvedData
     } = this.getResolvedState(nextProps, nextState)
 
-    const resolvedSorting = sorting.length ? sorting : this.getInitSorting(allDecoratedColumns)
+    const resolvedSorting = sorting && sorting.length ? sorting : this.getInitSorting(allDecoratedColumns)
 
     // Resolve the data from either manual data or sorted data
     return {
