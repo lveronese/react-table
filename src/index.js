@@ -9,6 +9,8 @@ import defaultProps from './defaultProps'
 export const ReactTableDefaults = defaultProps
 
 export default class ReactTable extends Methods(Lifecycle(Component)) {
+  static defaultProps = defaultProps
+
   constructor(props) {
     super()
 
@@ -513,10 +515,10 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
       const isExpanded = _.get(expanded, rowInfo.nestingPath)
       const trGroupProps = getTrGroupProps(finalState, rowInfo, undefined, this)
       const trProps = _.splitProps(getTrProps(finalState, rowInfo, undefined, this))
-      const isSelected = selected ? selected(finalState, rowInfo, undefined, this) : false;
-      const isRowEditable = editable
-        && (isSelected || multiRowEdit)
-        && (allowRowEdit ? allowRowEdit(finalState, rowInfo, undefined, this) : true);
+      const isSelected = selected ? selected(finalState, rowInfo, undefined, this) : false
+      const isRowEditable = editable &&
+        (isSelected || multiRowEdit) &&
+        (allowRowEdit ? allowRowEdit(finalState, rowInfo, undefined, this) : true)
       return (
         <TrGroupComponent key={rowInfo.nestingPath.join('_')} {...trGroupProps}>
           <TrComponent
@@ -528,7 +530,7 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
             {...trProps.rest}
           >
             {allVisibleColumns.map((column, i2) => {
-              let Cell = column.render;
+              let Cell = column.Cell
               const resizedCol = resized.find(x => x.id === column.id) || {}
               const show = typeof column.show === 'function'
                 ? column.show()
@@ -550,22 +552,22 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
                 column.getProps(finalState, rowInfo, column, this)
               )
               if (isRowEditable) {
-                if (column.editor
-                  && (column.allowCellEdit ? column.allowCellEdit(finalState, rowInfo, column, this) : true)) {
-                  Cell = column.editor;
+                if (column.Editor &&
+                  (column.allowCellEdit ? column.allowCellEdit(finalState, rowInfo, column, this) : true)) {
+                  Cell = column.Editor
                 }
               }
 
               const classes = [
                 tdProps.className,
                 column.className,
-                columnProps.className
+                columnProps.className,
               ]
 
               const styles = {
                 ...tdProps.style,
                 ...column.style,
-                ...columnProps.style
+                ...columnProps.style,
               }
 
               const cellInfo = {
@@ -582,7 +584,11 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
                 tdProps,
                 columnProps,
                 classes,
-                styles
+                styles,
+                meta: column.meta,
+                onChange: column.onChange,
+                disabled: false,
+                data: rowInfo.original,
               }
 
               const value = cellInfo.value
@@ -612,7 +618,7 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
 
               // Default to a standard cell
               let resolvedCell = _.normalizeComponent(
-                column.Cell,
+                Cell,
                 cellInfo,
                 value
               )
@@ -725,13 +731,7 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
                   {...tdProps.rest}
                   {...interactionProps}
                 >
-                  {_.normalizeComponent(resolvedCell, {
-                    meta: column.meta,
-                    onChange: column.onChange,
-                    disabled: false,
-                    data: rowInfo.rowValues.__original,
-                    value: rowInfo.rowValues[column.id]
-                  })}
+                  {resolvedCell}
                 </TdComponent>
               )
             })}
