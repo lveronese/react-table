@@ -15,7 +15,10 @@ export default {
   makeTemplateComponent,
   groupBy,
   isArray,
-  splitProps
+  splitProps,
+  compactObject,
+  isSortingDesc,
+  normalizeComponent,
 }
 
 function get (obj, path, def) {
@@ -61,23 +64,20 @@ function range (n) {
   return arr
 }
 
-function orderBy (arr, funcs, dirs) {
-  return arr.sort((a, b) => {
+function orderBy (arr, funcs, dirs, indexKey) {
+  return arr.sort((rowA, rowB) => {
     for (let i = 0; i < funcs.length; i++) {
       const comp = funcs[i]
-      const ca = comp(a)
-      const cb = comp(b)
       const desc = dirs[i] === false || dirs[i] === 'desc'
-      if (ca > cb) {
-        return desc ? -1 : 1
-      }
-      if (ca < cb) {
-        return desc ? 1 : -1
+      const sortInt = comp(rowA, rowB)
+      if (sortInt) {
+        return desc ? -sortInt : sortInt
       }
     }
+    // Use the row index for tie breakers
     return dirs[0]
-      ? a.__index - b.__index
-      : b.__index - b.__index
+      ? rowA[indexKey] - rowB[indexKey]
+      : rowB[indexKey] - rowA[indexKey]
   })
 }
 
@@ -94,12 +94,14 @@ function remove (a, b) {
 
 function clone (a) {
   try {
-    return JSON.parse(JSON.stringify(a, (key, value) => {
-      if (typeof value === 'function') {
-        return value.toString()
-      }
-      return value
-    }))
+    return JSON.parse(
+      JSON.stringify(a, (key, value) => {
+        if (typeof value === 'function') {
+          return value.toString()
+        }
+        return value
+      })
+    )
   } catch (e) {
     return a
   }
@@ -120,14 +122,10 @@ function sum (arr) {
 }
 
 function makeTemplateComponent (compClass) {
-  return ({children, className, ...rest}) => (
-    <div
-      className={classnames(compClass, className)}
-      {...rest}
-    >
+  return ({ children, className, ...rest }) =>
+    <div className={classnames(compClass, className)} {...rest}>
       {children}
     </div>
-  )
 }
 
 function groupBy (xs, key) {
@@ -149,10 +147,10 @@ function isArray (a) {
 
 function makePathArray (obj) {
   return flattenDeep(obj)
-      .join('.')
-      .replace('[', '.')
-      .replace(']', '')
-      .split('.')
+    .join('.')
+    .replace('[', '.')
+    .replace(']', '')
+    .split('.')
 }
 
 function flattenDeep (arr, newArr = []) {
@@ -166,10 +164,36 @@ function flattenDeep (arr, newArr = []) {
   return newArr
 }
 
-function splitProps ({className, style, ...rest}) {
+function splitProps ({ className, style, ...rest }) {
   return {
     className,
     style,
-    rest
+    rest,
   }
+}
+
+function compactObject (obj) {
+  const newObj = {}
+  for (var key in obj) {
+    if (
+      obj.hasOwnProperty(key) &&
+      obj[key] !== undefined &&
+      typeof obj[key] !== 'undefined'
+    ) {
+      newObj[key] = obj[key]
+    }
+  }
+  return newObj
+}
+
+function isSortingDesc (d) {
+  return !!(d.sort === 'desc' || d.desc === true || d.asc === false)
+}
+
+function normalizeComponent (Comp, params = {}, fallback = Comp) {
+  return typeof Comp === 'function'
+    ? Object.getPrototypeOf(Comp).isReactComponent
+      ? <Comp {...params} />
+      : Comp(params)
+    : fallback
 }
