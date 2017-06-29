@@ -99,7 +99,7 @@ $expandSize = 7px
     flex: 99999 1 auto
     display: flex
     flex-direction: column
-    overflow: auto
+    overflow: hidden
     // z-index:0
     .rt-tr-group
       border-bottom: solid 1px alpha(black, .05)
@@ -124,12 +124,16 @@ $expandSize = 7px
   .rt-th
   .rt-td
     flex: 1 0 0px
-    white-space: nowrap
+    // white-space: nowrap
+    max-height: 3em
     text-overflow: ellipsis
     padding: 7px 5px
-    // overflow: hidden
+    overflow: hidden
     transition: .3s ease
     transition-property: width, min-width, padding, opacity
+
+    &.-editable
+      overflow: visible;
 
     &.-hidden
       width: 0 !important

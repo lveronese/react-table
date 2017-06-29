@@ -130,7 +130,8 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
       hasHeaderGroups,
       // Sorted Data
       sortedData,
-      currentlyResizing
+      currentlyResizing,
+      jwt
     } = resolvedState
 
     // Pagination
@@ -551,10 +552,12 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
               const columnProps = _.splitProps(
                 column.getProps(finalState, rowInfo, column, this)
               )
+              let cellEditable = false;
               if (isRowEditable) {
                 if (column.Editor &&
                   (column.allowCellEdit ? column.allowCellEdit(finalState, rowInfo, column, this) : true)) {
                   Cell = column.Editor
+                  cellEditable = true;
                 }
               }
 
@@ -589,6 +592,7 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
                 onChange: column.onChange,
                 disabled: false,
                 data: rowInfo.original,
+                jwt
               }
 
               const value = cellInfo.value
@@ -598,6 +602,8 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
               let isPreview
 
               const onExpanderClick = e => {
+                if (!cellInfo.subRows)
+                  return;
                 let newExpanded = _.clone(expanded)
                 if (isExpanded) {
                   newExpanded = _.set(newExpanded, cellInfo.nestingPath, false)
@@ -719,6 +725,7 @@ export default class ReactTable extends Methods(Lifecycle(Component)) {
                   className={classnames(
                     classes,
                     !show && 'hidden',
+                    cellEditable && '-editable',
                     cellInfo.expandable && 'rt-expandable',
                     (isBranch || isPreview) && 'rt-pivot'
                   )}
