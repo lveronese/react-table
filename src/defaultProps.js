@@ -84,6 +84,7 @@ export default {
 
   // Server-side Callbacks
   onFetchData: () => null,
+  jwt: undefined,
 
   // Classes
   className: '',

@@ -37,6 +37,8 @@ $expandSize = 7px
 
       .rt-th
         border-right: 1px solid alpha(black, 0.02)
+        overflow: visible
+        max-height: none
 
     &.-header
       box-shadow: 0 2px 15px 0px alpha(black, .15)
@@ -99,7 +101,7 @@ $expandSize = 7px
     flex: 99999 1 auto
     display: flex
     flex-direction: column
-    overflow: auto
+    overflow: hidden
     // z-index:0
     .rt-tr-group
       border-bottom: solid 1px alpha(black, .05)
@@ -120,16 +122,20 @@ $expandSize = 7px
     flex: 1 0 auto
     display: inline-flex
   .rt-tr.-selected
-    background: rgba(0, 200, 180, 0.3) !important
+    background: rgba(14, 101, 204, 0.3) !important
   .rt-th
   .rt-td
     flex: 1 0 0px
-    white-space: nowrap
+    // white-space: nowrap
+    max-height: 3em
     text-overflow: ellipsis
     padding: 7px 5px
-    // overflow: hidden
+    overflow: hidden
     transition: .3s ease
     transition-property: width, min-width, padding, opacity
+
+    &.-editable
+      overflow: visible;
 
     &.-hidden
       width: 0 !important
@@ -187,7 +193,7 @@ $expandSize = 7px
   &.-highlight
     .rt-tbody
       .rt-tr:not(.-padRow):hover
-        background: rgba(0, 100, 0, .05)
+        background: rgba(200, 216, 235, 0.3) !important
 
   .-pagination
     z-index: 1
